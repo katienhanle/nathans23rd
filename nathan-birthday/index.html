@@ -1037,12 +1037,29 @@ document.getElementById('btn-pb-b').addEventListener('click', () => goBack());
 window.addEventListener('load', startHero);
 
 /* ════════════════════════════════════════════════════════════════
-   BACKGROUND MUSIC — plays on load, ducks when a voice memo plays
+   BACKGROUND MUSIC
+   iOS Safari ignores audio.volume (read-only on iOS), so we route
+   through a Web Audio GainNode which iOS DOES respect.
 ════════════════════════════════════════════════════════════════ */
-const bgm = document.getElementById('bgm');
+const bgm    = document.getElementById('bgm');
+let   bgmCtx = null;  // AudioContext, created once on first interaction
 
 function startBgm() {
-  bgm.volume = 0.03;
+  // Wire up Web Audio gain graph once — this is what actually controls
+  // volume on iOS (audio.volume is a no-op there)
+  if (!bgmCtx) {
+    try {
+      bgmCtx       = new (window.AudioContext || window.webkitAudioContext)();
+      const src    = bgmCtx.createMediaElementSource(bgm);
+      const gain   = bgmCtx.createGain();
+      gain.gain.value = 0.1;          // 10% — audible but not overpowering
+      src.connect(gain);
+      gain.connect(bgmCtx.destination);
+    } catch (_) {
+      bgm.volume = 0.1;               // fallback for browsers without Web Audio
+    }
+  }
+  if (bgmCtx && bgmCtx.state === 'suspended') bgmCtx.resume();
   bgm.play().catch(() => {});
 }
 
