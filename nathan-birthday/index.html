@@ -196,6 +196,11 @@
       justify-content: center;
       gap: 10px;
       padding: 16px 12px;
+      flex-shrink: 0;
+    }
+
+    /* friends list pushes controls to bottom since the list is scrollable */
+    #screen-friends .controls-row {
       margin-top: auto;
     }
 
@@ -390,6 +395,8 @@
       padding: 20px 16px 12px;
       gap: 14px;
       align-items: flex-start;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .playback-header {
@@ -445,10 +452,11 @@
       transition: width 0.4s linear;
     }
 
-    /* transcript box */
+    /* transcript box — hugs content, caps at available height, scrolls if very long */
     .transcript-box {
       width: 100%;
-      flex: 1;
+      flex: 0 0 auto;
+      max-height: calc(100vh - 220px);
       background: var(--bg-dialogue);
       border: 4px solid var(--border-outer);
       box-shadow:
