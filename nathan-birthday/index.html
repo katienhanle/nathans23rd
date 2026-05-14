@@ -264,6 +264,11 @@
       height: 96px;
     }
 
+    #sprite-luxray {
+      width: 48px;
+      height: 48px;
+    }
+
     .hero-dlg-wrap {
       width: calc(100% - 32px);
       margin: 0 16px;
@@ -587,6 +592,7 @@
       <span id="pb-time">0:00</span>
     </div>
     <audio id="audio-player" preload="auto"></audio>
+    <audio id="bgm" src="pokemon.mp3" loop preload="auto"></audio>
 
     <!-- transcript / dialogue -->
     <div class="transcript-box">
@@ -1029,6 +1035,47 @@ document.getElementById('btn-pb-b').addEventListener('click', () => goBack());
    INIT
 ════════════════════════════════════════════════════════════════ */
 window.addEventListener('load', startHero);
+
+/* ════════════════════════════════════════════════════════════════
+   BACKGROUND MUSIC — plays on load, ducks when a voice memo plays
+════════════════════════════════════════════════════════════════ */
+const bgm          = document.getElementById('bgm');
+const BGM_NORMAL   = 0.5;   // normal playback volume
+const BGM_DUCKED   = 0.08;  // volume while a voice memo is playing
+let   bgmFadeTimer = null;
+
+function fadeBgm(target, durationMs) {
+  if (bgmFadeTimer) clearInterval(bgmFadeTimer);
+  const steps    = 30;
+  const interval = durationMs / steps;
+  const start    = bgm.volume;
+  const delta    = (target - start) / steps;
+  let   step     = 0;
+  bgmFadeTimer = setInterval(() => {
+    step++;
+    bgm.volume = Math.min(1, Math.max(0, start + delta * step));
+    if (step >= steps) { clearInterval(bgmFadeTimer); bgmFadeTimer = null; }
+  }, interval);
+}
+
+function startBgm() {
+  bgm.volume = BGM_NORMAL;
+  bgm.play().catch(() => {});  // silently ignore if autoplay is blocked
+}
+
+// Try to autoplay immediately; most browsers allow it after a user gesture
+window.addEventListener('load', startBgm);
+
+// Guarantee music starts on the very first tap/click if autoplay was blocked
+document.addEventListener('click',   () => { if (bgm.paused) startBgm(); }, { once: true });
+document.addEventListener('keydown', () => { if (bgm.paused) startBgm(); }, { once: true });
+
+// Duck when voice memo starts playing
+audioEl.addEventListener('play', () => fadeBgm(BGM_DUCKED, 600));
+
+// Restore when voice memo ends, is paused, or user goes back
+audioEl.addEventListener('ended',  () => fadeBgm(BGM_NORMAL, 1200));
+audioEl.addEventListener('pause',  () => fadeBgm(BGM_NORMAL, 800));
 </script>
 </body>
 </html>
