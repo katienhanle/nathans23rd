@@ -1039,43 +1039,16 @@ window.addEventListener('load', startHero);
 /* ════════════════════════════════════════════════════════════════
    BACKGROUND MUSIC — plays on load, ducks when a voice memo plays
 ════════════════════════════════════════════════════════════════ */
-const bgm          = document.getElementById('bgm');
-const BGM_NORMAL   = 0.5;   // normal playback volume
-const BGM_DUCKED   = 0.08;  // volume while a voice memo is playing
-let   bgmFadeTimer = null;
-
-function fadeBgm(target, durationMs) {
-  if (bgmFadeTimer) clearInterval(bgmFadeTimer);
-  const steps    = 30;
-  const interval = durationMs / steps;
-  const start    = bgm.volume;
-  const delta    = (target - start) / steps;
-  let   step     = 0;
-  bgmFadeTimer = setInterval(() => {
-    step++;
-    bgm.volume = Math.min(1, Math.max(0, start + delta * step));
-    if (step >= steps) { clearInterval(bgmFadeTimer); bgmFadeTimer = null; }
-  }, interval);
-}
+const bgm = document.getElementById('bgm');
 
 function startBgm() {
-  bgm.volume = BGM_NORMAL;
-  bgm.play().catch(() => {});  // silently ignore if autoplay is blocked
+  bgm.volume = 0.1;
+  bgm.play().catch(() => {});
 }
 
-// Try to autoplay immediately; most browsers allow it after a user gesture
 window.addEventListener('load', startBgm);
-
-// Guarantee music starts on the very first tap/click if autoplay was blocked
 document.addEventListener('click',   () => { if (bgm.paused) startBgm(); }, { once: true });
 document.addEventListener('keydown', () => { if (bgm.paused) startBgm(); }, { once: true });
-
-// Duck when voice memo starts playing
-audioEl.addEventListener('play', () => fadeBgm(BGM_DUCKED, 600));
-
-// Restore when voice memo ends, is paused, or user goes back
-audioEl.addEventListener('ended',  () => fadeBgm(BGM_NORMAL, 1200));
-audioEl.addEventListener('pause',  () => fadeBgm(BGM_NORMAL, 800));
 </script>
 </body>
 </html>
