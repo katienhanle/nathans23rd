@@ -937,8 +937,23 @@ async function showPlayback(friend) {
     text = `${friend.name} recorded a message just for you.\n\nListen and know you are loved. ♥`;
   }
 
-  // typewrite the transcript (loosely synced with audio playing)
-  typewriter(transcriptEl, text, 28, null);
+  // speed = finish typing at 90% of audio duration; fallback 28ms/char if no audio
+  function startTyping() {
+    const dur = audioEl.duration;
+    const speed = (dur && isFinite(dur) && dur > 0 && text.length > 0)
+      ? Math.max(12, (dur * 0.9 * 1000) / text.length)
+      : 28;
+    typewriter(transcriptEl, text, speed, null);
+  }
+
+  if (audioEl.duration && isFinite(audioEl.duration) && audioEl.duration > 0) {
+    startTyping();
+  } else {
+    // wait for metadata so we know the duration before calculating speed
+    audioEl.addEventListener('loadedmetadata', startTyping, { once: true });
+    // fallback if audio is missing or metadata never fires
+    setTimeout(() => { if (!transcriptEl.textContent) startTyping(); }, 3000);
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════
